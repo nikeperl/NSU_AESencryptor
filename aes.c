@@ -1,6 +1,6 @@
 #include "aes.h"
 
-// Таблица sbox and rsbox
+// РўР°Р±Р»РёС†Р° sbox and rsbox
 const uint8_t sbox[256] = {
     0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5, 0x30, 0x01, 0x67, 0x2B, 0xFE, 0xD7, 0xAB, 0x76,
     0xCA, 0x82, 0xC9, 0x7D, 0xFA, 0x59, 0x47, 0xF0, 0xAD, 0xD4, 0xA2, 0xAF, 0x9C, 0xA4, 0x72, 0xC0,
@@ -38,24 +38,24 @@ const uint8_t rsbox[256] = {
     0x17, 0x2B, 0x04, 0x7E, 0xBA, 0x77, 0xD6, 0x26, 0xE1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0C, 0x7D
 };
 
-// Раундовые константы для генерации ключей раунда
+// Р Р°СѓРЅРґРѕРІС‹Рµ РєРѕРЅСЃС‚Р°РЅС‚С‹ РґР»СЏ РіРµРЅРµСЂР°С†РёРё РєР»СЋС‡РµР№ СЂР°СѓРЅРґР°
 const uint8_t rcon[NUM_ROUNDS] = { 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36 };
 
-// Генерирует ключи раунда на основе начального ключа
+// Р“РµРЅРµСЂРёСЂСѓРµС‚ РєР»СЋС‡Рё СЂР°СѓРЅРґР° РЅР° РѕСЃРЅРѕРІРµ РЅР°С‡Р°Р»СЊРЅРѕРіРѕ РєР»СЋС‡Р°
 void keyExpansion(uint8_t key[BLOCK_SIZE], uint8_t roundKeys[NUM_ROUNDS + 1][BLOCK_SIZE]) {
     uint8_t temp[4];
     int i, j;
-    // Копируем первый ключ
+    // РљРѕРїРёСЂСѓРµРј РїРµСЂРІС‹Р№ РєР»СЋС‡
     for (i = 0; i < BLOCK_SIZE; i++) {
         roundKeys[0][i] = key[i];
     }
 
     for (i = 1; i <= NUM_ROUNDS; i++) {
-        // Копируем последние 4 байта предыдущего ключа в temp
+        // РљРѕРїРёСЂСѓРµРј РїРѕСЃР»РµРґРЅРёРµ 4 Р±Р°Р№С‚Р° РїСЂРµРґС‹РґСѓС‰РµРіРѕ РєР»СЋС‡Р° РІ temp
         for (j = 0; j < 4; j++) {
             temp[j] = roundKeys[i - 1][BLOCK_SIZE - 4 + j];
         }
-        // Сдвигаем temp влево
+        // РЎРґРІРёРіР°РµРј temp РІР»РµРІРѕ
         uint8_t tempByte = temp[0];
         for (j = 0; j < 3; j++) {
             temp[j] = temp[j + 1];
@@ -65,38 +65,38 @@ void keyExpansion(uint8_t key[BLOCK_SIZE], uint8_t roundKeys[NUM_ROUNDS + 1][BLO
         for (j = 0; j < 4; j++) {
             temp[j] = sbox[temp[j]];
         }
-        // Добавляем round constant
+        // Р”РѕР±Р°РІР»СЏРµРј round constant
         temp[0] ^= rcon[i];
-        // Первые 4 байта нового ключа
+        // РџРµСЂРІС‹Рµ 4 Р±Р°Р№С‚Р° РЅРѕРІРѕРіРѕ РєР»СЋС‡Р°
         for (j = 0; j < 4; j++) {
             roundKeys[i][j] = roundKeys[i - 1][j] ^ temp[j];
         }
-        // Оставшиеся 12 байтов нового ключа
+        // РћСЃС‚Р°РІС€РёРµСЃСЏ 12 Р±Р°Р№С‚РѕРІ РЅРѕРІРѕРіРѕ РєР»СЋС‡Р°
         for (j = 4; j < BLOCK_SIZE; j++) {
             roundKeys[i][j] = roundKeys[i - 1][j] ^ roundKeys[i][j - 4];
         }
     }
 }
 
-// Заменяет каждый байт в блоке на соответствующее значение из S-блока
+// Р—Р°РјРµРЅСЏРµС‚ РєР°Р¶РґС‹Р№ Р±Р°Р№С‚ РІ Р±Р»РѕРєРµ РЅР° СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РµРµ Р·РЅР°С‡РµРЅРёРµ РёР· S-Р±Р»РѕРєР°
 void subBytes(uint8_t state[BLOCK_SIZE]) {
     for (int i = 0; i < BLOCK_SIZE; i++) {
-        // Заменяем байт на соответствующее значение из S-блока
+        // Р—Р°РјРµРЅСЏРµРј Р±Р°Р№С‚ РЅР° СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РµРµ Р·РЅР°С‡РµРЅРёРµ РёР· S-Р±Р»РѕРєР°
         state[i] = sbox[state[i]];
     }
 }
-// Реализация обратной функции
+// Р РµР°Р»РёР·Р°С†РёСЏ РѕР±СЂР°С‚РЅРѕР№ С„СѓРЅРєС†РёРё
 void invSubBytes(uint8_t state[BLOCK_SIZE]) {
     for (int i = 0; i < BLOCK_SIZE; i++) {
         state[i] = rsbox[state[i]];
     }
 }
 
-// Перемешивает строки в блоке
+// РџРµСЂРµРјРµС€РёРІР°РµС‚ СЃС‚СЂРѕРєРё РІ Р±Р»РѕРєРµ
 void shiftRows(uint8_t state[BLOCK_SIZE]) {
     uint8_t temp[BLOCK_SIZE];
 
-    // Копируем state во временный массив
+    // РљРѕРїРёСЂСѓРµРј state РІРѕ РІСЂРµРјРµРЅРЅС‹Р№ РјР°СЃСЃРёРІ
     memcpy(temp, state, BLOCK_SIZE);
 
     for (int i = 0; i < 4; i++) {
@@ -105,11 +105,11 @@ void shiftRows(uint8_t state[BLOCK_SIZE]) {
         }
     }
 }
-// Реализация обратной функции
+// Р РµР°Р»РёР·Р°С†РёСЏ РѕР±СЂР°С‚РЅРѕР№ С„СѓРЅРєС†РёРё
 void invShiftRows(uint8_t state[BLOCK_SIZE]) {
     uint8_t temp[BLOCK_SIZE];
 
-    // Копируем state во временный массив
+    // РљРѕРїРёСЂСѓРµРј state РІРѕ РІСЂРµРјРµРЅРЅС‹Р№ РјР°СЃСЃРёРІ
     memcpy(temp, state, BLOCK_SIZE);
 
     for (int i = 0; i < 4; i++) {
@@ -119,7 +119,7 @@ void invShiftRows(uint8_t state[BLOCK_SIZE]) {
     }
 }
 
-// Функция умножения на x в поле Галуа
+// Р¤СѓРЅРєС†РёСЏ СѓРјРЅРѕР¶РµРЅРёСЏ РЅР° x РІ РїРѕР»Рµ Р“Р°Р»СѓР°
 uint8_t multiply(uint8_t x, uint8_t y) {
     uint8_t result = 0;
     uint8_t high_bit_set;
@@ -130,14 +130,14 @@ uint8_t multiply(uint8_t x, uint8_t y) {
         high_bit_set = x & 0x80;
         x <<= 1;
         if (high_bit_set) {
-            x ^= 0x1b; // 0x1B - неприводимый полином в поле Галуа
+            x ^= 0x1b; // 0x1B - РЅРµРїСЂРёРІРѕРґРёРјС‹Р№ РїРѕР»РёРЅРѕРј РІ РїРѕР»Рµ Р“Р°Р»СѓР°
         }
         y >>= 1;
     }
     return result;
 }
 
-// Смешивает столбцы в блоке
+// РЎРјРµС€РёРІР°РµС‚ СЃС‚РѕР»Р±С†С‹ РІ Р±Р»РѕРєРµ
 void mixColumns(uint8_t state[BLOCK_SIZE]) {
     uint8_t temp_state[BLOCK_SIZE];
 
@@ -153,7 +153,7 @@ void mixColumns(uint8_t state[BLOCK_SIZE]) {
         state[i] = temp_state[i];
     }
 }
-// Реализация обратной функции
+// Р РµР°Р»РёР·Р°С†РёСЏ РѕР±СЂР°С‚РЅРѕР№ С„СѓРЅРєС†РёРё
 void invMixColumns(uint8_t state[BLOCK_SIZE]) {
     uint8_t temp_state[BLOCK_SIZE];
 
@@ -170,20 +170,20 @@ void invMixColumns(uint8_t state[BLOCK_SIZE]) {
     }
 }
 
-// Добавляет ключ раунда к блоку
+// Р”РѕР±Р°РІР»СЏРµС‚ РєР»СЋС‡ СЂР°СѓРЅРґР° Рє Р±Р»РѕРєСѓ
 void addRoundKey(uint8_t state[BLOCK_SIZE], uint8_t roundKey[BLOCK_SIZE]) {
     for (int i = 0; i < BLOCK_SIZE; i++) {
-        // Применяем операцию XOR к каждому байту блока данных и ключа раунда
+        // РџСЂРёРјРµРЅСЏРµРј РѕРїРµСЂР°С†РёСЋ XOR Рє РєР°Р¶РґРѕРјСѓ Р±Р°Р№С‚Сѓ Р±Р»РѕРєР° РґР°РЅРЅС‹С… Рё РєР»СЋС‡Р° СЂР°СѓРЅРґР°
         state[i] ^= roundKey[i];
     }
 }
 
-// Шифрует один блок данных
+// РЁРёС„СЂСѓРµС‚ РѕРґРёРЅ Р±Р»РѕРє РґР°РЅРЅС‹С…
 void encryptBlock(uint8_t block[BLOCK_SIZE], uint8_t roundKeys[NUM_ROUNDS + 1][BLOCK_SIZE]) {
-    // Начальный раунд: добавление ключа раунда
+    // РќР°С‡Р°Р»СЊРЅС‹Р№ СЂР°СѓРЅРґ: РґРѕР±Р°РІР»РµРЅРёРµ РєР»СЋС‡Р° СЂР°СѓРЅРґР°
     addRoundKey(block, roundKeys[0]);
 
-    // 9 основных раундов
+    // 9 РѕСЃРЅРѕРІРЅС‹С… СЂР°СѓРЅРґРѕРІ
     for (int round = 1; round < NUM_ROUNDS; round++) {
         subBytes(block);
         shiftRows(block);
@@ -191,18 +191,18 @@ void encryptBlock(uint8_t block[BLOCK_SIZE], uint8_t roundKeys[NUM_ROUNDS + 1][B
         addRoundKey(block, roundKeys[round]);
     }
 
-    // Последний основной раунд без mixColumns
+    // РџРѕСЃР»РµРґРЅРёР№ РѕСЃРЅРѕРІРЅРѕР№ СЂР°СѓРЅРґ Р±РµР· mixColumns
     subBytes(block);
     shiftRows(block);
     addRoundKey(block, roundKeys[NUM_ROUNDS]);
 }
 
-// Дешифрует один блок данных
+// Р”РµС€РёС„СЂСѓРµС‚ РѕРґРёРЅ Р±Р»РѕРє РґР°РЅРЅС‹С…
 void decryptBlock(uint8_t block[BLOCK_SIZE], uint8_t roundKeys[NUM_ROUNDS + 1][BLOCK_SIZE]) {
-    // Начальный раунд: добавление последнего ключа раунда
+    // РќР°С‡Р°Р»СЊРЅС‹Р№ СЂР°СѓРЅРґ: РґРѕР±Р°РІР»РµРЅРёРµ РїРѕСЃР»РµРґРЅРµРіРѕ РєР»СЋС‡Р° СЂР°СѓРЅРґР°
     addRoundKey(block, roundKeys[NUM_ROUNDS]);
 
-    // 9 основных раундов в обратном порядке
+    // 9 РѕСЃРЅРѕРІРЅС‹С… СЂР°СѓРЅРґРѕРІ РІ РѕР±СЂР°С‚РЅРѕРј РїРѕСЂСЏРґРєРµ
     for (int round = NUM_ROUNDS - 1; round > 0; round--) {
         invShiftRows(block);
         invSubBytes(block);
@@ -210,7 +210,7 @@ void decryptBlock(uint8_t block[BLOCK_SIZE], uint8_t roundKeys[NUM_ROUNDS + 1][B
         invMixColumns(block);
     }
 
-    // Последний основной раунд без invMixColumns
+    // РџРѕСЃР»РµРґРЅРёР№ РѕСЃРЅРѕРІРЅРѕР№ СЂР°СѓРЅРґ Р±РµР· invMixColumns
     invShiftRows(block);
     invSubBytes(block);
     addRoundKey(block, roundKeys[0]);
