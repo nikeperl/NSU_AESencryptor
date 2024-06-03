@@ -4,7 +4,7 @@
 ## Использование
 1. **Скомпилируйте программу**:
     ```bash
-    gcc -o aes_encryptor aes_encryptor.c
+    gcc -o aes_encryptor main.c aes.c
     ```
 
 2. **Запустите программу**:
